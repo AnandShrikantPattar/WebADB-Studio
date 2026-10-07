@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ADB Studio — Device Manager & One-Click Captures</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <!-- Top Header -->
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                    <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+            </div>
+            <div>
+                <h1>ADB Studio</h1>
+                <p class="subtitle">Connect Android devices &amp; capture screenshots, recordings, logs, and bug reports
+                    in one
+                    click</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div id="connectionBadge" class="status-pill disconnected">
+                <span class="dot"></span>
+                <span id="connectionBadgeText">Checking ADB...</span>
+            </div>
+            <button id="btnRefreshDevices" class="btn btn-secondary" title="Check connected ADB devices">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Check Devices
+            </button>
+            <button id="btnToggleConnectPanel" class="btn btn-outline">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Connect Device
+            </button>
+            <button id="btnThemeToggle" class="btn btn-ghost theme-toggle-btn"
+                title="Switch between Dark and Light theme">
+                <span id="themeToggleIcon">☀️</span>
+                <span id="themeToggleText">Light</span>
+            </button>
+        </div>
+    </header>
+    <main class="container">
+        <!-- Toast Notification Banner -->
+        <div id="toastContainer" class="toast-container"></div>
+        <!-- SECTION 1: Connected Devices & Connect New Device -->
+        <section class="panel device-section">
+            <div class="panel-header">
+                <div>
+                    <h2>1. Connected ADB Devices</h2>
+                    <p class="panel-desc">Select an active device below, or connect a device via USB or Wi-Fi if none is
+                        connected.</p>
+                </div>
+                <div class="device-toolbar">
+                    <button id="btnToggleControllerPanel" class="btn btn-sm btn-primary"
+                        title="Open Android Remote Controller (D-Pad, Navigation, Volume, Power, Text)">
+                        🎮 Controller
+                    </button>
+                    <button id="btnToggleApkPanel" class="btn btn-sm btn-accent" title="Open APK Flashing Studio">
+                        ⚡ APK Flashing
+                    </button>
+                    <button id="btnEnableTcpip" class="btn btn-sm btn-ghost"
+                        title="Switch selected USB device to wireless ADB on port 5555">
+                        Enable Wi-Fi Mode (TCP/IP 5555)
+                    </button>
+                    <button id="btnRestartAdb" class="btn btn-sm btn-ghost"
+                        title="Run adb kill-server &amp;&amp; adb start-server">
+                        Restart ADB Server
+                    </button>
+                </div>
+            </div>
+            <!-- Connected Device Cards List -->
+            <div id="deviceList" class="device-grid">
+                <!-- Populated dynamically by app.js -->
+            </div>
+            <!-- Android Device Remote Controller Expandable Panel -->
+            <div id="controllerPanel" class="gha-drawer controller-drawer hidden">
+                <div class="gha-drawer-header">
+                    <div>
+                        <div class="gha-title-row">
+                            <h3>🎮 Android Device Controller</h3>
+                            <span id="controllerTargetBadge" class="gha-mode-badge mode-phone">Target: Auto</span>
+                        </div>
+                        <p class="panel-desc">
+                            Send basic navigation keys, D-Pad directional input, volume &amp; power controls, touch
+                            swipes, or text
+                            directly to the active device over ADB.
+                        </p>
+                    </div>
+                </div>
+                <div class="controller-grid">
+                    <!-- Column 1: D-Pad + Android Navigation Bar -->
+                    <div class="gha-box controller-box">
+                        <h4>1. D-Pad &amp; Navigation Keys</h4>
+                        <div class="dpad-wrapper">
+                            <div class="dpad-grid">
+                                <div></div>
+                                <button type="button" class="btn ctrl-key dpad-btn" data-ctrl-action="keyevent"
+                                    data-keycode="19" data-label="D-Pad Up" title="KEYCODE_DPAD_UP (19)">▲</button>
+                                <div></div>
+                                <button type="button" class="btn ctrl-key dpad-btn" data-ctrl-action="keyevent"
+                                    data-keycode="21" data-label="D-Pad Left" title="KEYCODE_DPAD_LEFT (21)">◀</button>
+                                <button type="button" class="btn ctrl-key dpad-btn dpad-ok" data-ctrl-action="keyevent"
+                                    data-keycode="23" data-label="D-Pad Center / OK"
+                                    title="KEYCODE_DPAD_CENTER (23)">OK</button>
+                                <button type="button" class="btn ctrl-key dpad-btn" data-ctrl-action="keyevent"
+                                    data-keycode="22" data-label="D-Pad Right"
+                                    title="KEYCODE_DPAD_RIGHT (22)">▶</button>
+                                <div></div>
+                                <button type="button" class="btn ctrl-key dpad-btn" data-ctrl-action="keyevent"
+                                    data-keycode="20" data-label="D-Pad Down" title="KEYCODE_DPAD_DOWN (20)">▼</button>
+                                <div></div>
+                            </div>
+                        </div>
+                        <div class="nav-keys-row">
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="4" data-label="Back" title="KEYCODE_BACK (4)">
+                                ◀ Back
+                            </button>
+                            <button type="button" class="btn btn-primary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="3" data-label="Home" title="KEYCODE_HOME (3)">
+                                ● Home
+                            </button>
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="187" data-label="Recents / App Switch" title="KEYCODE_APP_SWITCH (187)">
+                                ■ Recents
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Column 2: Power, Volume, Media & Quick Actions -->
+                    <div class="gha-box controller-box">
+                        <h4>2. Power, Volume &amp; System Keys</h4>
+                        <div class="ctrl-section-label">Power &amp; Screen</div>
+                        <div class="ctrl-btn-grid">
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="224" data-label="Wake Up" title="KEYCODE_WAKEUP (224)">
+                                ☀️ Wake Up
+                            </button>
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="223" data-label="Sleep" title="KEYCODE_SLEEP (223)">
+                                🌙 Sleep
+                            </button>
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="26" data-label="Power Button" title="KEYCODE_POWER (26)">
+                                ⏻ Power Key
+                            </button>
+                            <button type="button" class="btn btn-danger-outline ctrl-key" data-ctrl-action="reboot"
+                                data-label="Reboot Device" title="adb reboot">
+                                🔄 Reboot
+                            </button>
+                        </div>
+                        <div class="ctrl-section-label" style="margin-top: 12px;">Volume &amp; Media</div>
+                        <div class="ctrl-btn-grid">
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="24" data-label="Volume Up" title="KEYCODE_VOLUME_UP (24)">
+                                🔊 Vol +
+                            </button>
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="25" data-label="Volume Down" title="KEYCODE_VOLUME_DOWN (25)">
+                                🔉 Vol -
+                            </button>
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="164" data-label="Volume Mute" title="KEYCODE_VOLUME_MUTE (164)">
+                                🔇 Mute
+                            </button>
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                data-keycode="85" data-label="Play / Pause" title="KEYCODE_MEDIA_PLAY_PAUSE (85)">
+                                ⏯ Play/Pause
+                            </button>
+                        </div>
+                        <div class="ctrl-section-label" style="margin-top: 12px;">Status Bar &amp; App Shortcuts</div>
+                        <div class="ctrl-btn-grid">
+                            <button type="button" class="btn btn-ghost ctrl-key" data-ctrl-action="statusbar"
+                                data-sub="expand-notifications" data-label="Expand Notifications">
+                                🔔 Notifications
+                            </button>
+                            <button type="button" class="btn btn-ghost ctrl-key" data-ctrl-action="statusbar"
+                                data-sub="expand-settings" data-label="Quick Settings">
+                                ⚙️ Quick Settings
+                            </button>
+                            <button type="button" class="btn btn-ghost ctrl-key" data-ctrl-action="statusbar"
+                                data-sub="collapse" data-label="Collapse Shade">
+                                ⬆️ Collapse
+                            </button>
+                            <button type="button" class="btn btn-outline ctrl-key" data-ctrl-action="launch_gha"
+                                data-label="Launch GHA">
+                                🏠 Open GHA
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Column 3: Touch Swipes & Text Input -->
+                    <div class="gha-box controller-box">
+                        <h4>3. Swipes &amp; Keyboard Input</h4>
+                        <div class="ctrl-section-label">Touch Screen Swipes</div>
+                        <div class="ctrl-btn-grid">
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="swipe"
+                                data-direction="up" data-label="Swipe Up">
+                                ⬆️ Swipe Up
+                            </button>
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="swipe"
+                                data-direction="down" data-label="Swipe Down">
+                                ⬇️ Swipe Down
+                            </button>
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="swipe"
+                                data-direction="left" data-label="Swipe Left">
+                                ⬅️ Swipe Left
+                            </button>
+                            <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="swipe"
+                                data-direction="right" data-label="Swipe Right">
+                                ➡️ Swipe Right
+                            </button>
+                        </div>
+                        <div class="ctrl-section-label" style="margin-top: 14px;">Type Text on Device</div>
+                        <form id="formControllerText" class="ctrl-text-form">
+                            <input type="text" id="inputControllerText" placeholder="Type text to send to device..."
+                                autocomplete="off" />
+                            <div class="ctrl-btn-grid" style="margin-top: 8px; grid-template-columns: 2fr 1fr 1fr;">
+                                <button type="submit" class="btn btn-primary">⌨️ Send Text</button>
+                                <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                    data-keycode="67" data-label="Backspace" title="KEYCODE_DEL (67)">
+                                    ⌫ Del
+                                </button>
+                                <button type="button" class="btn btn-secondary ctrl-key" data-ctrl-action="keyevent"
+                                    data-keycode="66" data-label="Enter" title="KEYCODE_ENTER (66)">
+                                    ↵ Enter
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- APK Flashing Expandable Panel -->
+            <div id="apkFlashingPanel" class="apk-drawer gha-drawer hidden">
+                <div class="apk-drawer-header gha-drawer-header">
+                    <div>
+                        <div class="apk-title-row gha-title-row">
+                            <h3>⚡ APK Flashing Studio</h3>
+                            <span id="apkDetectedBadge" class="apk-mode-badge gha-mode-badge">Target Ready</span>
+                        </div>
+                        <p class="panel-desc">
+                            Install and flash <code>.apk</code> packages directly to your connected Android device via
+                            ADB with real-time status and live execution logs.
+                        </p>
+                        <div id="apkCurrentDeviceInfo" class="device-meta" style="margin-top: 8px;"></div>
+                    </div>
+                </div>
+                <div class="apk-grid gha-grid">
+                    <!-- Left Column: Drag & Drop + Upload APK + Flash Controls -->
+                    <div class="apk-box gha-box gha-config-box">
+                        <div>
+                            <h4>1. Select or Upload APK</h4>
+                            <p class="help-text">Drag &amp; drop your <code>.apk</code> file below, or click to upload
+                                from your
+                                computer.</p>
+                            <div id="apkDropzone" class="apk-dropzone">
+                                <input type="file" id="apkFileInput" accept=".apk" class="hidden-file-input" />
+                                <div class="dropzone-icon">📦</div>
+                                <div class="dropzone-title" id="apkDropzoneTitle">Drag &amp; Drop <code>.apk</code> here
+                                </div>
+                                <div class="dropzone-sub" id="apkDropzoneSub">or click below to browse &amp; upload
+                                </div>
+                                <button type="button" id="btnBrowseApk" class="btn btn-sm btn-primary"
+                                    style="margin-top: 8px;">
+                                    Upload APK File
+                                </button>
+                            </div>
+                            <div class="input-group" style="margin-top: 14px;">
+                                <label for="selectUploadedApk">Selected APK for Flashing</label>
+                                <select id="selectUploadedApk">
+                                    <option value="">-- Upload or drop a .apk file above --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px;">
+                            <button type="button" id="btnStartApkFlash" class="btn btn-accent btn-block">
+                                ⚡ Start APK Flashing
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Right Column: Execution Pipeline + ADB Execution Console -->
+                    <div class="apk-box gha-box gha-pipeline-panel">
+                        <div class="pipeline-header-row">
+                            <h3 id="apkPathTitle" class="pipeline-heading">Execution Pipeline</h3>
+                            <span id="apkConsoleStatusBadge" class="device-state-badge state-device hidden">Ready</span>
+                        </div>
+                        <!-- Execution Pipeline (Steps 1–3) -->
+                        <div id="apkSteps" class="pipeline-steps-list">
+                            <div class="pipeline-step-card" data-step="1">
+                                <div class="pipeline-step-left">
+                                    <div class="pipeline-step-num">1</div>
+                                    <div class="pipeline-step-info">
+                                        <div class="pipeline-step-title">Check Existing Package</div>
+                                        <div class="pipeline-step-cmd">adb shell pm path &lt;package&gt; &amp;&amp;
+                                            uninstall if present</div>
+                                    </div>
+                                </div>
+                                <div class="pipeline-step-status">Pending</div>
+                            </div>
+                            <div class="pipeline-step-card" data-step="2">
+                                <div class="pipeline-step-left">
+                                    <div class="pipeline-step-num">2</div>
+                                    <div class="pipeline-step-info">
+                                        <div class="pipeline-step-title">Install APK</div>
+                                        <div class="pipeline-step-cmd">adb install -d -r &lt;apk&gt;</div>
+                                    </div>
+                                </div>
+                                <div class="pipeline-step-status">Pending</div>
+                            </div>
+                            <div class="pipeline-step-card" data-step="3">
+                                <div class="pipeline-step-left">
+                                    <div class="pipeline-step-num">3</div>
+                                    <div class="pipeline-step-info">
+                                        <div class="pipeline-step-title">Verify &amp; Launch</div>
+                                        <div class="pipeline-step-cmd">adb shell monkey -p &lt;package&gt; -c
+                                            android.intent.category.LAUNCHER 1</div>
+                                    </div>
+                                </div>
+                                <div class="pipeline-step-status">Pending</div>
+                            </div>
+                        </div>
+                        <!-- ADB Execution Console -->
+                        <div id="apkConsoleWrap" class="pipeline-console-wrap">
+                            <div class="pipeline-console-header">
+                                <div class="pipeline-console-title-group">
+                                    <span class="mac-dots">
+                                        <span class="mac-dot dot-red"></span>
+                                        <span class="mac-dot dot-yellow"></span>
+                                        <span class="mac-dot dot-green"></span>
+                                    </span>
+                                    <span id="apkConsoleStep" class="pipeline-console-title">ADB Execution
+                                        Console</span>
+                                </div>
+                                <div class="pipeline-console-controls">
+                                    <label class="console-autoscroll-label">
+                                        <input type="checkbox" id="chkApkAutoScroll" checked />
+                                        <span>Auto-scroll</span>
+                                    </label>
+                                    <button type="button" id="btnClearApkConsole"
+                                        class="console-pill-btn">Clear</button>
+                                    <button type="button" id="btnCopyApkConsole" class="console-pill-btn">Copy</button>
+                                </div>
+                            </div>
+                            <pre id="apkConsoleOutput"
+                                class="pipeline-console-pre">System initialized. Connect an Android device and select an APK to begin.</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            <!-- Empty State + Connect Device Drawer (Auto-shown when no device is connected) -->
+            <div id="connectPanel" class="connect-drawer">
+                <div class="connect-drawer-header">
+                    <div>
+                        <h3 id="connectPanelTitle">Connect an Android Device</h3>
+                        <p>No device connected? Plug in via USB with <strong>USB Debugging</strong> enabled, or connect
+                            wirelessly
+                            below.</p>
+                    </div>
+                </div>
+                <div class="connect-methods-grid">
+                    <!-- Method A: Wireless IP:Port Connect -->
+                    <div class="connect-box">
+                        <div class="connect-box-title">
+                            <span class="badge-num">A</span>
+                            <h4>Connect via Wi-Fi (IP &amp; Port)</h4>
+                        </div>
+                        <p class="help-text">Run <code>adb connect &lt;ip&gt;:&lt;port&gt;</code> to attach a device
+                            over Wi-Fi.</p>
+                        <form id="formConnectIp" class="inline-form">
+                            <div class="input-group flex-2">
+                                <label for="inputConnectIp">Device IP Address</label>
+                                <input type="text" id="inputConnectIp" placeholder="e.g. 192.168.1.45" required />
+                            </div>
+                            <div class="input-group flex-1">
+                                <label for="inputConnectPort">Port</label>
+                                <input type="text" id="inputConnectPort" value="5555" placeholder="5555" />
+                            </div>
+                            <button type="submit" id="btnConnectSubmit" class="btn btn-primary">
+                                Connect
+                            </button>
+                        </form>
+                    </div>
+                    <!-- Method B: Android 11+ Wireless Pairing -->
+                    <div class="connect-box">
+                        <div class="connect-box-title">
+                            <span class="badge-num">B</span>
+                            <h4>Pair Wireless Debugging (Android 11+)</h4>
+                        </div>
+                        <p class="help-text">From <em>Developer Options &rarr; Wireless debugging &rarr; Pair device
+                                with pairing
+                                code</em>.</p>
+                        <form id="formPairDevice" class="inline-form">
+                            <div class="input-group flex-2">
+                                <label for="inputPairIp">IP Address</label>
+                                <input type="text" id="inputPairIp" placeholder="e.g. 192.168.1.45" required />
+                            </div>
+                            <div class="input-group flex-1">
+                                <label for="inputPairPort">Pairing Port</label>
+                                <input type="text" id="inputPairPort" placeholder="e.g. 39451" required />
+                            </div>
+                            <div class="input-group flex-1">
+                                <label for="inputPairCode">Pairing Code</label>
+                                <input type="text" id="inputPairCode" placeholder="6-digit code" required />
+                            </div>
+                            <button type="submit" id="btnPairSubmit" class="btn btn-secondary">
+                                Pair
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- SECTION 2: Naming & One-Click Capture Controls -->
+        <section class="panel capture-section">
+            <div class="panel-header">
+                <div>
+                    <h2>2. Custom Name &amp; One-Click Captures</h2>
+                    <p class="panel-desc">Set a shared name or customize names individually. Each capture type is
+                        automatically
+                        saved in its own folder.</p>
+                </div>
+                <button id="btnCaptureAll" class="btn btn-accent"
+                    title="Take Screenshot + Dump Logs + Start Bug Report in one click">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    One-Click Capture All
+                </button>
+            </div>
+            <!-- Global Naming Bar -->
+            <div class="naming-bar">
+                <div class="naming-input-wrap">
+                    <label for="globalCustomName">Global Capture Name (applies to all unless overridden below)</label>
+                    <div class="input-with-clear">
+                        <input type="text" id="globalCustomName"
+                            placeholder="e.g. login_screen_issue, checkout_crash, test_run_01" autocomplete="off" />
+                        <button type="button" id="btnClearGlobalName" class="btn-clear"
+                            title="Clear name">&times;</button>
+                    </div>
+                </div>
+                <div class="naming-options">
+                    <label class="checkbox-label" title="When checked, appends _YYYYMMDD_HHMMSS to prevent overwriting">
+                        <input type="checkbox" id="chkIncludeTimestamp" checked />
+                        <span>Append Timestamp (<code>_YYYYMMDD_HHMMSS</code>)</span>
+                    </label>
+                </div>
+            </div>
+            <!-- 4 One-Click Capture Cards -->
+            <div class="capture-grid">
+                <!-- Card 1: Screenshot -->
+                <div class="capture-card" data-category="screenshots">
+                    <div class="card-top">
+                        <div class="card-icon icon-screenshot">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                                </path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="card-title-group">
+                            <h3>Screenshot</h3>
+                            <span class="folder-badge" title="Saved in dedicated screenshots/ folder">📁
+                                screenshots/</span>
+                        </div>
+                        <button class="btn-icon open-folder-btn" data-folder="screenshots"
+                            title="Open screenshots/ folder in Finder">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <label for="nameScreenshot">Screenshot Name</label>
+                        <input type="text" id="nameScreenshot" class="custom-name-input" placeholder="screenshot" />
+                        <div class="filename-preview">
+                            Saves as: <code id="previewScreenshot">screenshots/screenshot_TIMESTAMP.png</code>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button id="btnScreenshot" class="btn btn-primary btn-block">
+                            📸 Take Screenshot
+                        </button>
+                    </div>
+                </div>
+                <!-- Card 2: Screen Recording -->
+                <div class="capture-card" data-category="screen_recordings">
+                    <div class="card-top">
+                        <div class="card-icon icon-recording">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                            </svg>
+                        </div>
+                        <div class="card-title-group">
+                            <h3>Screen Recording</h3>
+                            <span class="folder-badge" title="Saved in dedicated screen_recordings/ folder">📁
+                                screen_recordings/</span>
+                        </div>
+                        <button class="btn-icon open-folder-btn" data-folder="screen_recordings"
+                            title="Open screen_recordings/ folder in Finder">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row-inputs">
+                            <div class="flex-2">
+                                <label for="nameRecording">Recording Name</label>
+                                <input type="text" id="nameRecording" class="custom-name-input"
+                                    placeholder="screen_recording" />
+                            </div>
+                            <div class="flex-1">
+                                <label for="selectRecDuration">Time Limit</label>
+                                <select id="selectRecDuration">
+                                    <option value="">Manual Stop (max 3m)</option>
+                                    <option value="10">10 sec</option>
+                                    <option value="15">15 sec</option>
+                                    <option value="30">30 sec</option>
+                                    <option value="60">60 sec</option>
+                                    <option value="180">180 sec</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="filename-preview">
+                            Saves as: <code
+                                id="previewRecording">screen_recordings/screen_recording_TIMESTAMP.mp4</code>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button id="btnScreenRecord" class="btn btn-danger-outline btn-block">
+                            ⏺ Start Screen Recording
+                        </button>
+                    </div>
+                </div>
+                <!-- Card 3: Logs (Logcat) -->
+                <div class="capture-card" data-category="logs">
+                    <div class="card-top">
+                        <div class="card-icon icon-logs">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="card-title-group">
+                            <h3>Device Logs (Logcat)</h3>
+                            <span class="folder-badge" title="Saved in dedicated logs/ folder">📁 logs/</span>
+                        </div>
+                        <button class="btn-icon open-folder-btn" data-folder="logs" title="Open logs/ folder in Finder">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row-inputs">
+                            <div class="flex-2">
+                                <label for="nameLogs">Log File Name</label>
+                                <input type="text" id="nameLogs" class="custom-name-input" placeholder="logcat" />
+                            </div>
+                            <div class="flex-1">
+                                <label for="selectLogLevel">Filter Level</label>
+                                <select id="selectLogLevel">
+                                    <option value=":V">All (Verbose)</option>
+                                    <option value=":D">Debug &amp; above</option>
+                                    <option value=":I">Info &amp; above</option>
+                                    <option value=":W">Warnings &amp; Errors</option>
+                                    <option value=":E">Errors Only (:E)</option>
+                                    <option value=":F">Fatal / Crash (:F)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="filename-preview">
+                            Saves as: <code id="previewLogs">logs/logcat_TIMESTAMP.txt</code>
+                        </div>
+                    </div>
+                    <div class="card-footer split-footer">
+                        <button id="btnStartLogs" class="btn btn-start-logs flex-1"
+                            title="Start collecting device logs">
+                            ▶ Start Logs
+                        </button>
+                        <button id="btnStopLogs" class="btn btn-stop-logs flex-1"
+                            title="Stop collecting and save logs to .txt" disabled>
+                            ⏹ Stop Logs
+                        </button>
+                        <button id="btnClearLogs" class="btn btn-ghost"
+                            title="Clear device logcat buffer (adb logcat -c)">
+                            🧹
+                        </button>
+                    </div>
+                </div>
+                <!-- Card 4: Bug Report -->
+                <div class="capture-card" data-category="bug_reports">
+                    <div class="card-top">
+                        <div class="card-icon icon-bugreport">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="8" y="6" width="8" height="14" rx="4"></rect>
+                                <path d="M19 7l-3 2"></path>
+                                <path d="M5 7l3 2"></path>
+                                <path d="M19 19l-3-2"></path>
+                                <path d="M5 19l3-2"></path>
+                                <path d="M20 13h-4"></path>
+                                <path d="M4 13h4"></path>
+                                <path d="M10 4l1 2"></path>
+                                <path d="M14 4l-1 2"></path>
+                            </svg>
+                        </div>
+                        <div class="card-title-group">
+                            <h3>Bug Report</h3>
+                            <span class="folder-badge" title="Saved in dedicated bug_reports/ folder">📁
+                                bug_reports/</span>
+                        </div>
+                        <button class="btn-icon open-folder-btn" data-folder="bug_reports"
+                            title="Open bug_reports/ folder in Finder">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <label for="nameBugReport">Bug Report Name</label>
+                        <input type="text" id="nameBugReport" class="custom-name-input" placeholder="bugreport" />
+                        <div class="filename-preview">
+                            Saves as: <code id="previewBugReport">bug_reports/bugreport_TIMESTAMP.zip</code>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button id="btnBugReport" class="btn btn-warning btn-block">
+                            🐞 Generate Bug Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- SECTION 3: Captured Files Browser (Organized by Separate Folders) -->
+        <section class="panel files-section">
+            <div class="panel-header">
+                <div>
+                    <h2>3. Saved Captures by Folder</h2>
+                    <p class="panel-desc">Preview, download, or reveal your captured files in their separate folders.
+                    </p>
+                </div>
+                <div class="folder-tabs" id="folderTabs">
+                    <button class="tab-btn active" data-tab="all">All Captures <span class="count"
+                            id="count-all">0</span></button>
+                    <button class="tab-btn" data-tab="screenshots">📁 screenshots/ <span class="count"
+                            id="count-screenshots">0</span></button>
+                    <button class="tab-btn" data-tab="screen_recordings">📁 screen_recordings/ <span class="count"
+                            id="count-screen_recordings">0</span></button>
+                    <button class="tab-btn" data-tab="logs">📁 logs/ <span class="count"
+                            id="count-logs">0</span></button>
+                    <button class="tab-btn" data-tab="bug_reports">📁 bug_reports/ <span class="count"
+                            id="count-bug_reports">0</span></button>
+                </div>
+            </div>
+            <div id="folderPathBanner" class="folder-path-banner">
+                <span>Storage Root: <code id="storageRootText">Loading...</code></span>
+                <button id="btnOpenCurrentFolder" class="btn btn-sm btn-secondary">Open Folder in Finder</button>
+            </div>
+            <div id="filesTableWrap" class="files-list">
+                <!-- Populated dynamically by app.js -->
+            </div>
+        </section>
+    </main>
+    <!-- Preview Modal (for Screenshots, Videos, and Log files) -->
+    <div id="previewModal" class="modal hidden">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Preview</h3>
+                <div class="modal-actions">
+                    <a id="modalDownloadBtn" class="btn btn-sm btn-primary" href="#" download>Download</a>
+                    <button id="modalCloseBtn" class="btn btn-sm btn-ghost">&times; Close</button>
+                </div>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+        </div>
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
